@@ -782,6 +782,7 @@ void ShoutConnection::updateMetaData() {
         if (m_pMetaData != nullptr) {
 
             QString artist = m_pMetaData->getArtist();
+            QString album = m_pMetaData->getAlbum();
             QString title = m_pMetaData->getTitle();
 
             // shoutcast uses only "song" as field for "artist - title".
@@ -797,6 +798,7 @@ void ShoutConnection::updateMetaData() {
             if (!m_format_is_mp3 && m_protocol_is_icecast2) {
             	setFunctionCode(9);
             	insertMetaData("artist", encodeString(artist).constData());
+                insertMetaData("album", encodeString(album).constData());
             	insertMetaData("title", encodeString(title).constData());
             } else {
                 // we are going to take the metadata format and replace all
@@ -809,18 +811,18 @@ void ShoutConnection::updateMetaData() {
                 QString metadataFinal = m_metadataFormat;
                 do {
                     // find the next occurrence
-                    replaceIndex = metadataFinal.indexOf(
-                                      QRegExp("\\$artist|\\$title"),
-                                      replaceIndex);
+                    replaceIndex = metadataFinal.indexOf(QRegExp("\\$artist|\\$album|\\$title"), replaceIndex);
 
                     if (replaceIndex != -1) {
-                        if (metadataFinal.indexOf(
-                                          QRegExp("\\$artist"), replaceIndex)
-                                          == replaceIndex) {
+                        if (metadataFinal.indexOf(QRegExp("\\$artist"), replaceIndex) == replaceIndex) {
                             metadataFinal.replace(replaceIndex, 7, artist);
-                            // skip to the end of the replacement
-                            replaceIndex += artist.length();
-                        } else {
+                            replaceIndex += artist.length();  // skip to the end of the replacement
+                        } 
+                        else if (metadataFinal.indexOf(QRegExp("\\$album"), replaceIndex) == replaceIndex) {
+                            metadataFinal.replace(replaceIndex, 6, album);
+                            replaceIndex += album.length();
+                        }
+                        else {
                             metadataFinal.replace(replaceIndex, 6, title);
                             replaceIndex += title.length();
                         }
